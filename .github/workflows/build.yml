@@ -65,10 +65,14 @@ jobs:
           cd ios/App
           xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release build CODE_SIGNING_ALLOWED=NO
 
+      # Bước đã sửa lỗi vị trí file .app nha pé
       - name: Package into .ipa
         run: |
           mkdir -p Payload
-          cp -r ios/App/build/Release-iphoneos/App.app Payload/
+          # Sử dụng lệnh find để tự động tìm file .app chính xác
+          APP_PATH=$(find . -name "*.app" | grep "Release" | head -n 1)
+          echo "Found .app file at: $APP_PATH"
+          cp -r "$APP_PATH" Payload/
           zip -r KawaiiApp.ipa Payload
 
       - name: Upload IPA Artifact
