@@ -19,17 +19,15 @@ jobs:
             unzip -o Collections.zip -d .
           fi
 
-      # Tự tìm thư mục chứa index.html và chuẩn bị folder www cho Capacitor
+      # Tìm thư mục chứa index.html và chuẩn bị folder www
       - name: Organize web assets into www folder
         run: |
           mkdir -p www
-          # Tìm vị trí của index.html
           INDEX_PATH=$(find . -maxdepth 3 -name "index.html" -not -path "./www/*" | head -n 1)
           
           if [ -n "$INDEX_PATH" ]; then
             SRC_DIR=$(dirname "$INDEX_PATH")
             echo "Found index.html in $SRC_DIR"
-            # Copy toàn bộ nội dung cùng thư mục với index.html vào www
             cp -r "$SRC_DIR"/* www/ 2>/dev/null || true
           else
             echo "Could not find index.html!"
@@ -46,10 +44,17 @@ jobs:
           npm install -g @ionic/cli
           npm install @capacitor/core @capacitor/cli @capacitor/ios
 
-      - name: Initialize Capacitor
+      # Khởi tạo và nâng target iOS lên 14.0 để tránh lỗi CocoaPods
+      - name: Initialize Capacitor & Fix iOS Target
         run: |
           npx cap init "KawaiiApp" "com.kawaii.app" --web-dir www
           npx cap add ios
+          
+          # Sửa Podfile nâng platform ios lên 14.0
+          sed -i '' "s/platform :ios, '13.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
+          sed -i '' "s/platform :ios, '12.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
+          
+          npx cap update ios
           npx cap copy
 
       - name: Build iOS App (.app)
