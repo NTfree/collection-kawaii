@@ -60,19 +60,17 @@ jobs:
           
           npx cap copy
 
+      # Chỉ định rõ đường dẫn xuất file build ra thư mục ios/App/build
       - name: Build iOS App (.app)
         run: |
           cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release build CODE_SIGNING_ALLOWED=NO
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release SYMROOT=$(pwd)/build CODE_SIGNING_ALLOWED=NO
 
-      # Bước đã sửa lỗi vị trí file .app nha pé
+      # Đóng gói thành file .ipa từ thư mục build cố định
       - name: Package into .ipa
         run: |
           mkdir -p Payload
-          # Sử dụng lệnh find để tự động tìm file .app chính xác
-          APP_PATH=$(find . -name "*.app" | grep "Release" | head -n 1)
-          echo "Found .app file at: $APP_PATH"
-          cp -r "$APP_PATH" Payload/
+          cp -r ios/App/build/Release-iphoneos/App.app Payload/
           zip -r KawaiiApp.ipa Payload
 
       - name: Upload IPA Artifact
