@@ -44,15 +44,21 @@ jobs:
           npm install -g @ionic/cli
           npm install @capacitor/core @capacitor/cli @capacitor/ios
 
-      # Khởi tạo và nâng target iOS lên 14.0 để tránh lỗi CocoaPods
+      # Khởi tạo và ép Podfile xài iOS 15.0 triệt để
       - name: Initialize Capacitor & Fix iOS Target
         run: |
           npx cap init "KawaiiApp" "com.kawaii.app" --web-dir www
           npx cap add ios
           
-          # Sửa Podfile nâng platform ios lên 14.0
-          sed -i '' "s/platform :ios, '13.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
-          sed -i '' "s/platform :ios, '12.0'/platform :ios, '14.0'/g" ios/App/Podfile || true
+          # Đảm bảo nâng platform lên iOS 15.0
+          python3 -c "
+          with open('ios/App/Podfile', 'r') as f:
+              content = f.read()
+          import re
+          content = re.sub(r\"platform :ios, '[0-9.]+'\", \"platform :ios, '15.0'\", content)
+          with open('ios/App/Podfile', 'w') as f:
+              f.write(content)
+          "
           
           npx cap update ios
           npx cap copy
