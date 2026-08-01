@@ -19,6 +19,12 @@ jobs:
             unzip -o Collections.zip -d .
           fi
 
+      # Chuẩn bị thư mục www cho Capacitor (Sửa lỗi "." is not a valid value for webDir)
+      - name: Organize web assets into www folder
+        run: |
+          mkdir -p www
+          find . -maxdepth 1 -not -name 'www' -not -name '.git' -not -name '.github' -not -name 'Collections.zip' -exec mv {} www/ \; || true
+
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -31,7 +37,7 @@ jobs:
 
       - name: Initialize Capacitor
         run: |
-          npx cap init "KawaiiApp" "com.kawaii.app" --web-dir .
+          npx cap init "KawaiiApp" "com.kawaii.app" --web-dir www
           npx cap add ios
           npx cap copy
 
