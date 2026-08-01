@@ -1,1 +1,53 @@
+name: Build iOS IPA
 
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Tự động giải nén file zip code của pé
+      - name: Unzip project files
+        run: |
+          if [ -f "Collections.zip" ]; then
+            unzip -o Collections.zip -d .
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install Ionic CLI & Capacitor
+        run: |
+          npm install -g @ionic/cli
+          npm install @capacitor/core @capacitor/cli @capacitor/ios
+
+      - name: Initialize Capacitor
+        run: |
+          npx cap init "KawaiiApp" "com.kawaii.app" --web-dir .
+          npx cap add ios
+          npx cap copy
+
+      - name: Build iOS App (.app)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace -scheme App -sdk iphoneos -configuration Release build CODE_SIGNING_ALLOWED=NO
+
+      - name: Package into .ipa
+        run: |
+          mkdir -p Payload
+          cp -r ios/App/build/Release-iphoneos/App.app Payload/
+          zip -r KawaiiApp.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: KawaiiApp-IPA
+          path: KawaiiApp.ipa
