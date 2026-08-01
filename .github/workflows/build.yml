@@ -39,39 +39,25 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install Ionic CLI & Capacitor
+      # Cài đặt Capacitor v5 siêu ổn định
+      - name: Install Ionic CLI & Capacitor v5
         run: |
           npm install -g @ionic/cli
-          npm install @capacitor/core @capacitor/cli @capacitor/ios
+          npm install @capacitor/core@5 @capacitor/cli@5 @capacitor/ios@5
 
-      # Khởi tạo Capacitor với iOS Target 16.0 ngay từ đầu
-      - name: Initialize Capacitor & Fix iOS Target
+      - name: Initialize Capacitor & Build iOS
         run: |
           npx cap init "KawaiiApp" "com.kawaii.app" --web-dir www
-          
-          # Cấu hình iOS Deployment Target lên 16.0 trực tiếp
-          python3 -c "
-          import json
-          with open('capacitor.config.json', 'r') as f:
-              data = json.load(f)
-          data['ios'] = {'minVersion': '16.0'}
-          with open('capacitor.config.json', 'w') as f:
-              json.dump(data, f, indent=2)
-          "
-          
           npx cap add ios
           
-          # Ép Podfile lên iOS 16.0 thêm 1 lần cho chắc chắn
-          python3 -c "
-          with open('ios/App/Podfile', 'r') as f:
-              content = f.read()
-          import re
-          content = re.sub(r\"platform :ios, '[0-9.]+'\", \"platform :ios, '16.0'\", content)
-          with open('ios/App/Podfile', 'w') as f:
-              f.write(content)
-          "
+          # Sửa Podfile ép dùng iOS 14.0 chuẩn cho v5
+          sed -i '' "s/platform :ios, '[0-9.]*'/platform :ios, '14.0'/g" ios/App/Podfile
           
-          npx cap update ios
+          # Cập nhật pod trực tiếp
+          cd ios/App
+          pod install --repo-update
+          cd ../..
+          
           npx cap copy
 
       - name: Build iOS App (.app)
